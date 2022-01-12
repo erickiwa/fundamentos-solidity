@@ -1,5 +1,5 @@
-pragma solidity ^0.5.3;
-//Solidity
+//versão do Solidity
+//pragma solidity ^0.5.3;
 
 //tipos de valores: Basicamente como definir os dados nas funções.
 contract Values {
@@ -11,15 +11,13 @@ contract Values {
     uint256 public myUint256 = 99999;
 }
 
-pragma solidity ^0.5.3;
-
 //conceito de enuns: geralmente usado para definir estados da aplicação,
 //nesse caso é só uma interação de "ativar".
 contract Enuns {
     enum State {Waiting, Ready, Active}
     State public state;
 
-    contructor() public {
+    constructor() public {
         state = State.Waiting;
     }
 
@@ -28,7 +26,7 @@ contract Enuns {
     }
 
     function isActive() public view returns(bool) {
-        return state == State.Active
+        return state == State.Active;
     }
 }
 
@@ -37,19 +35,33 @@ contract Structs {
     uint256 public peopleCount;
     mapping(uint => Person) public people;
 
+    //address é um dado próprio do solidity
+    address owner;
+
+    modifier onlyOwner() {
+        require (msg.sender == owner);
+        _;
+    }
+
     struct Person {
         uint _id;
         string _firstName;
         string _lastName;
     }
+    //definindo que o owner é quem fez o deploy do contrato
+    constructor() public {
+        owner = msg.sender;
+    }
 
-    function addPerson(string memory _firstName, string memory _lastName) public {
+    //o modificador onlyOwner diz que apenas quem fez o deploy do contrato pode fazer essa ação,
+    //se outra carteira/address tentar usar esta função a transação vai ser automaticamente revertida
+    function addPerson(string memory _firstName, string memory _lastName) public onlyOwner {
         incrementCount();
         people[peopleCount] = Person(peopleCount, _firstName, _lastName);
     }
 
-//exemplo de função interna, pode-se ser usada dentro de outra função como no exemplo acima. 
-//Se esta fosse uma public function então o contador poderia ser incrementado separadamente da adição de pessoas.
+    //exemplo de função interna, pode-se ser usada dentro de outra função como no exemplo acima. 
+    //Se esta fosse uma public function então o contador poderia ser incrementado separadamente da adição de pessoas.
     function incrementCount() internal {
         peopleCount += 1;
     }
