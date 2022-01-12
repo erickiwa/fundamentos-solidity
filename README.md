@@ -1,2 +1,1 @@
-
-Fundamentos do Solidity
+Fundamentos e exemplos do Solidity
