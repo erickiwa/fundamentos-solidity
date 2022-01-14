@@ -103,3 +103,34 @@ contract Structs {
 
     */ 
 }
+
+//exemplo de função de compra de token
+contract BuyToken {
+    mapping(address => uint256) public balances;
+    address payable wallet;
+
+    event Purchase(
+        address indexed _buyer, 
+        uint256 _amount
+    );
+    
+    constructor(address payable _wallet) public {
+        wallet = _wallet;
+    }
+
+    //fallback function
+    function() external payable {
+        buyToken();
+    }
+    
+
+    //função que compra tokens
+    function buyToken() public  payable{
+        //compra
+        balances[msg.sender] += 1;
+        //envio de eth
+        wallet.transfer(msg.value);
+        //emitindo uma log na interação do contrato
+        emit Purchase(msg.sender, 1);
+    }
+}
