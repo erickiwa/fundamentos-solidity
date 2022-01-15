@@ -134,3 +134,123 @@ contract BuyToken {
         emit Purchase(msg.sender, 1);
     }
 }
+
+
+//-------------------------------------------------------------------------------------------------------------------
+
+//exemplos de contrato ERC20, usar apenas o conteudo
+contract ERC20Exemplo {
+    //token ERC20
+    contract ERC20Token {
+        string public name;
+
+        mapping(address => uint256) public balances;
+
+        function mint() public {
+            //usar o [tx.origin] ao inves do [msg.sender]
+            //[tx.origin] = se refere ao endereço que fez a interação com o contrato
+            //[msg.sender] = pode ser tanto um endereço quando um contrato que fez uma interação com outro.
+            //nesse caso quebraria o balance ao usar o [msg.sender] pois o valor do buytoken estaria armazenado no coontrato
+            balances[tx.origin] ++;
+        }
+    }
+
+    contract BuyToken {
+        address payable wallet;
+        address public token;
+
+        constructor(address payable _wallet, address _token) public {
+            wallet = _wallet;
+            token = _token;
+        }
+
+        function() external payable {
+            buyToken();
+        }
+        
+        function buyToken() public  payable{
+            //aqui esse contrato está chamando o outro, usando as funções que criamos no erc20token que anteriormente estavam nesse contrato
+            ERC20Token(address(token)).mint();
+            //envio de eth
+            wallet.transfer(msg.value);
+        }
+    }
+}
+
+
+//nese exemplo o deploy do contrato se vai apenas no "myToken" ja que refenciamos o contrato ERC20Token
+contract ERC20Exemplo2 {
+    //token ERC20
+    contract ERC20Token {
+        string public name;
+
+        mapping(address => uint256) public balances;
+
+        constructor(string memory _name) public {
+            name = _name;
+        }
+        
+        function mint() public {
+            balances[tx.origin] ++;
+        }
+    }
+
+    //aqui estamos sobrepondo informações de um contrato com outro
+    contract MyToken is ERC20Token {
+        //codigo abaixo pode ser usado para definir o nome antes do deploy
+        //string public name = "ERC20Exemplo"
+        
+        string public symbol;
+        address[] public owners;
+        uint256 ownerCount;
+        
+        //também podemos adicionar novas funcionalidades, não necessariamente precisamos apenas sobreescrever.
+        
+        //aqui estamos puxando o symbol e o name referenciado no "contrato pai"
+        constructor(string memory _name, string memory _symbol) ERC20Token(_name) public {
+            symbol = _symbol;
+        }
+
+        //contagem 
+        function mint() public {
+            //"super" da total acesso ao contrato parente, nesse caso o mint do ERC20Token
+            super.mint();
+            //incremento para a listagem
+            ownerCount ++;
+            //lista carteiras que fizeram o mint, por id, a partir do 0
+            owners.push(msg.sender);
+        }
+    }
+}
+
+//librarys no solidity
+//outra opção para usar librarys é criar um arquivo .sol com a mesma versão do solidity e referenciar com um import, para manter a organização
+//Ex: import "./Math.sol
+contract Librarys {
+
+    //librarys podem ser usadas tanto apra reutilizar código quanto para fazer verificações em valores
+    library Math {
+        function divide(uint256 a, uint256 b) internal pure returns (uint256) {
+            require (b > 0);
+            uint256 c =  a / b;
+            return c;
+        }
+    }
+
+    contract MyContract {
+        uint256 public value;
+        
+        //utilizando a função da library que eu criei acima, essa função não permite a interação com o contrato caso a divisão seja para 0, pois gastaria gás desnecessario
+        function calculate(uint _value1, uint _value2) public {
+            value = Math.divide(_value1, _value2);
+        }
+    }
+
+}
+
+/*
+Links uteis: 
+https://docs.openzeppelin.com/contracts/4.x/
+https://docs.soliditylang.org/en/v0.8.11/
+https://www.tutorialspoint.com/solidity/index.htm
+*/
